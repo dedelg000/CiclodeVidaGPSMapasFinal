@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +24,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -35,9 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private static final int REQUEST_CODE_GPS = 1001;
     private TextView locationTextView;
-    private double latitudeAtual;
-    private double longitudeAtual;
-    private ArrayList <String> localAtual = new ArrayList();
+    private ArrayList <String> localAtual = new ArrayList<>();
+    private int cont = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,12 +48,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText editText = (EditText) findViewById(R.id.busca);
-                String campo = editText.getText().toString();
-                Uri gmmIntentUri = Uri.parse(String.format("geo:%f,%f?q=%s", latitudeAtual, longitudeAtual, campo));
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);
+               Intent intent = new Intent (MainActivity.this, ListaLocalActivity.class);
+               Bundle extra = new Bundle();
+               extra.putSerializable("locais", localAtual);
+               intent.putExtra("extra", extra);
+               startActivity(intent);
             }
         });
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -65,15 +61,15 @@ public class MainActivity extends AppCompatActivity {
             public void onLocationChanged(Location location) {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
-                latitudeAtual = lat;
-                longitudeAtual = lon;
-                locationTextView.setText(String.format("Lat: %f, Long: %f", lat, lon));
+                locationTextView.setText(String.format("Localizações armazenadas: %d", cont));
                 if (localAtual.size() == 50){
                     localAtual.remove(0);
                     localAtual.add(String.format("Lat: %f, Long: %f", lat, lon));
                 }else {
                     localAtual.add(String.format("Lat: %f, Long: %f", lat, lon));
+                    cont++;
                 }
+
             }
 
             @Override
@@ -118,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 120000, 200, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 20, 0, locationListener);
         }
         else{
             ActivityCompat.requestPermissions(this,
